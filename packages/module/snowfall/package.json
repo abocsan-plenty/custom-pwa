@@ -1,5 +1,5 @@
 {
-  "name": "@demo-agency/snowfall",
+  "name": "snowfall",
   "version": "1.0.0",
   "description": "Adds an animated falling snow overlay to every shop page.",
   "license": "MIT",
