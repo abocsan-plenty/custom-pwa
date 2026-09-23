@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       module:
-        description: 'Folder name under packages/module to publish (e.g. "my-extension" for packages/module/my-extension)'
+        description: 'Path under packages/ to the module to publish (e.g. "module/my-extension" or "modules/nice-modules/my-module")'
         type: string
         required: true
       dryRun:
@@ -20,7 +20,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     env:
-      MODULE_PATH: packages/module/${{ inputs.module }}
+      MODULE_PATH: packages/${{ inputs.module }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -34,13 +34,57 @@ jobs:
 
       - name: Verify module folder exists
         run: |
+          MODULE_SUBPATH="${MODULE_PATH#packages/}"
+          if [[ ! "$MODULE_SUBPATH" =~ ^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$ ]]; then
+            echo "Invalid module path: '$MODULE_SUBPATH'. Only letters, numbers, hyphens, underscores, and '/' between segments are allowed (no '..', no leading '/', no dots)." >&2
+            exit 1
+          fi
           test -d "$MODULE_PATH" || { echo "No such folder: $MODULE_PATH"; exit 1; }
 
       - name: Build module
         run: npx turbo run build --filter="./$MODULE_PATH"
 
       - name: Validate marketplace package requirements
-        run: node scripts/validate-module-package.mjs "$MODULE_PATH"
+        run: |
+          missing=()
+
+          check_file() {
+            [[ -f "$MODULE_PATH/$1" ]] || missing+=("$1")
+          }
+
+          check_file "package.json"
+
+          if [[ ! -f "$MODULE_PATH/marketplace.json" ]]; then
+            missing+=("marketplace.json")
+          else
+            for field in price shortDescription categories; do
+              node -e "
+                const pkg = JSON.parse(require('fs').readFileSync(process.argv[1], 'utf-8'));
+                process.exit(process.argv[2] in pkg ? 0 : 1);
+              " "$MODULE_PATH/marketplace.json" "$field" \
+                || missing+=("marketplace.json: missing \"$field\"")
+            done
+          fi
+
+          for subject in author plugin; do
+            for size in xs sm md; do
+              check_file "meta/images/icon_${subject}_${size}.png"
+            done
+          done
+
+          for doc in support_contact changelog user_guide; do
+            for lang in en de; do
+              check_file "meta/documents/${doc}_${lang}.md"
+            done
+          done
+
+          if [[ ${#missing[@]} -gt 0 ]]; then
+            echo "Module package \"$MODULE_PATH\" is missing required marketplace files/fields:" >&2
+            printf '  - %s\n' "${missing[@]}" >&2
+            exit 1
+          fi
+
+          echo "Module package \"$MODULE_PATH\" passes marketplace validation."
 
       - name: Configure npm auth
         run: |
