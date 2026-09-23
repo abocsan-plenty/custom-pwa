@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MODULE_PATH: packages/${{ inputs.module }}
+      NPM_REGISTRY_HOST: shop-npm-registry.plentyone.com
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -94,15 +95,12 @@ jobs:
             echo "//${NPM_REGISTRY_HOST}/:always-auth=true"
           } >> "$MODULE_PATH/.npmrc"
         env:
-          NPM_REGISTRY_HOST: ${{ vars.NPM_REGISTRY_HOST }}
           NPM_USERNAME: ${{ secrets.NPM_USERNAME }}
           NPM_PASSWORD: ${{ secrets.NPM_PASSWORD }}
 
       - name: Publish
         working-directory: ${{ env.MODULE_PATH }}
         run: npm publish --registry "https://${NPM_REGISTRY_HOST}" ${{ inputs.dryRun && '--dry-run' || '' }}
-        env:
-          NPM_REGISTRY_HOST: ${{ vars.NPM_REGISTRY_HOST }}
 
       - name: Clean up npm auth
         if: always()
