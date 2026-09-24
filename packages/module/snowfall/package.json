@@ -1,6 +1,6 @@
 {
   "name": "@demo-agency/snowfall",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Adds an animated falling snow overlay to every shop page.",
   "license": "MIT",
   "type": "module",
