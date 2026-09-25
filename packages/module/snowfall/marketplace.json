@@ -1,4 +1,5 @@
 {
+  "marketplaceName": { "en": "Snowfall", "de": "Schneefall" },
   "price": 0,
   "shortDescription": "Adds an animated falling snow overlay to every shop page.",
   "categories": ["seasonal", "ui"]
