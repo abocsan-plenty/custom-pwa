@@ -1,7 +1,7 @@
 {
   "name": "@batman2/snowfall",
-  "version": "1.0.0",
-  "description": "Adds an animated falling snow overlay to every shop page.",
+  "version": "1.0.1",
+  "description": "Adds an animated falling leaves or snow overlay to every shop page.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/module.mjs",
