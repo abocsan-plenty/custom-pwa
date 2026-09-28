@@ -58,9 +58,10 @@ jobs:
             const path = process.argv[1];
             const errors = [];
 
+            const raw = fs.readFileSync(path, "utf-8");
             let pkg;
             try {
-              pkg = JSON.parse(fs.readFileSync(path, "utf-8"));
+              pkg = JSON.parse(raw);
             } catch (e) {
               console.error(`marketplace.json is not valid JSON: ${e.message}`);
               process.exit(1);
@@ -70,9 +71,13 @@ jobs:
 
             const checkLocalizedString = (field) => {
               const value = pkg[field];
-              if (!value || typeof value !== "object") {
-                errors.push(`"${field}" must be an object keyed by language (e.g. { "en": ..., "de": ... })`);
+              if (!value || typeof value !== "object" || Array.isArray(value)) {
+                errors.push(`"${field}" must be an object keyed by language ({ "en": ..., "de": ... })`);
                 return;
+              }
+              const extraLangs = Object.keys(value).filter((lang) => !requiredLangs.includes(lang));
+              if (extraLangs.length > 0) {
+                errors.push(`"${field}" must only contain the languages ${requiredLangs.join(", ")}, found extra: ${extraLangs.join(", ")}`);
               }
               for (const lang of requiredLangs) {
                 if (typeof value[lang] !== "string" || value[lang].trim() === "") {
@@ -84,8 +89,11 @@ jobs:
             checkLocalizedString("marketplaceName");
             checkLocalizedString("shortDescription");
 
+            const priceMatch = raw.match(/"price"\s*:\s*(-?\d+(?:\.\d+)?)/);
             if (typeof pkg.price !== "number") {
               errors.push(`"price" is required and must be a number`);
+            } else if (!priceMatch || !priceMatch[1].includes(".")) {
+              errors.push(`"price" must be written as a float with a decimal point (e.g. 0.00 or 10.00), not a plain integer`);
             } else if (pkg.price !== 0 && pkg.price < 10) {
               errors.push(`"price" must be 0.00 (free) or at least 10.00 (paid), got ${pkg.price}`);
             }
