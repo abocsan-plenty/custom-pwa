@@ -1,6 +1,6 @@
 import { defineNuxtModule, addPlugin, createResolver } from '@nuxt/kit';
 
-export type ParticleType = 'snow' | 'leaves';
+export type ParticleType = 'snow' | 'leaves' | 'blossom' | 'sunflower';
 
 export interface ModuleOptions {
   enabled: boolean;
@@ -17,8 +17,8 @@ export default defineNuxtModule<ModuleOptions>({
   defaults: {
     enabled: true,
     flakeCount: 60,
-    // Only used when particleType is 'snow' — leaves render with their own
-    // built-in autumn palette instead of a single flat color.
+    // Only used when particleType is 'snow' — leaves/blossom/sunflower render
+    // with their own built-in seasonal palette instead of a single flat color.
     color: '#ffffff',
     particleType: 'leaves',
   },

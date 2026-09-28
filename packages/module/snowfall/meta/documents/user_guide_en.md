@@ -19,7 +19,11 @@ snowfall: {
 },
 ```
 
-Set `particleType: 'snow'` to switch to falling snow instead. `color` only applies to snow — leaves always use their built-in autumn palette:
+Set `particleType` to switch the effect:
+
+- `'snow'` — falling snow. `color` only applies here — every other type uses its own built-in palette.
+- `'blossom'` — falling cherry blossom petals (pink tones), for spring.
+- `'sunflower'` — falling sunflower petals (yellow/orange tones), for summer.
 
 ```ts
 snowfall: {
@@ -33,6 +37,6 @@ snowfall: {
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `enabled` | `boolean` | `true` | Turns the effect on or off. |
-| `particleType` | `'leaves' \| 'snow'` | `'leaves'` | Which particle effect to render. |
+| `particleType` | `'leaves' \| 'snow' \| 'blossom' \| 'sunflower'` | `'leaves'` | Which particle effect to render. |
 | `flakeCount` | `number` | `60` | Number of particles rendered at once. |
-| `color` | `string` | `#ffffff` | CSS color used for snowflakes. Ignored when `particleType` is `'leaves'`. |
+| `color` | `string` | `#ffffff` | CSS color used for snowflakes. Ignored unless `particleType` is `'snow'`. |

@@ -1,10 +1,20 @@
 import { defineNuxtPlugin, useRuntimeConfig } from '#app';
 
-type ParticleType = 'snow' | 'leaves';
+type ParticleType = 'snow' | 'leaves' | 'blossom' | 'sunflower';
 
 // Autumn leaf tones — leaves look wrong in a single flat color, so each leaf
 // picks one of these at random instead of using the configured `color`.
 const LEAF_COLORS = ['#c9772e', '#a13d2a', '#d99a2b', '#8a5a2b', '#b5451b', '#e0b23c'];
+// Cherry blossom tones for the spring 'blossom' particle type.
+const BLOSSOM_COLORS = ['#ffd1dc', '#ffb3c6', '#ff8fab', '#f6a5c0', '#fcdfe8'];
+// Sunflower petal tones for the summer 'sunflower' particle type.
+const SUNFLOWER_COLORS = ['#ffcc00', '#ffb703', '#f4a900', '#e8a33d', '#fdd835'];
+// Dark seed-head color at the center of each sunflower.
+const SUNFLOWER_CENTER_COLOR = '#5b3a1e';
+
+// Particle types that flutter side to side as they fall, like a real petal or
+// leaf, rather than drifting steadily like snow.
+const FLUTTERING_TYPES: ParticleType[] = ['leaves', 'blossom', 'sunflower'];
 
 interface Particle {
   x: number;
@@ -54,8 +64,22 @@ export default defineNuxtPlugin(() => {
   const particleType = publicConfig.snowfallParticleType ?? 'leaves';
   const particleCount = publicConfig.snowfallFlakeCount ?? 60;
   const snowColor = publicConfig.snowfallColor ?? '#ffffff';
+  const flutters = FLUTTERING_TYPES.includes(particleType);
 
-  const randomLeafColor = () => LEAF_COLORS[Math.floor(Math.random() * LEAF_COLORS.length)];
+  const randomFrom = (colors: string[]) => colors[Math.floor(Math.random() * colors.length)];
+
+  const randomParticleColor = () => {
+    switch (particleType) {
+      case 'leaves':
+        return randomFrom(LEAF_COLORS);
+      case 'blossom':
+        return randomFrom(BLOSSOM_COLORS);
+      case 'sunflower':
+        return randomFrom(SUNFLOWER_COLORS);
+      default:
+        return snowColor;
+    }
+  };
 
   const particles: Particle[] = Array.from({ length: particleCount }, () => ({
     x: Math.random() * canvas.width,
@@ -67,7 +91,7 @@ export default defineNuxtPlugin(() => {
     rotationSpeed: Math.random() * 0.04 - 0.02,
     swayPhase: Math.random() * Math.PI * 2,
     swayAmplitude: Math.random() * 0.6 + 0.2,
-    color: particleType === 'leaves' ? randomLeafColor() : snowColor,
+    color: randomParticleColor(),
   }));
 
   let frame = 0;
@@ -106,22 +130,74 @@ export default defineNuxtPlugin(() => {
     ctx.restore();
   };
 
+  // A single rounded petal shape for the 'blossom' particle type.
+  const drawPetal = (particle: Particle) => {
+    const size = particle.radius * 2.2;
+
+    ctx.save();
+    ctx.translate(particle.x, particle.y);
+    ctx.rotate(particle.rotation);
+
+    ctx.fillStyle = particle.color;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size * 0.55, size, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  };
+
+  // A tiny flower: a ring of petals radiating from a dark seed-head center —
+  // reads as a sunflower at a glance, unlike a single flat petal.
+  const drawSunflower = (particle: Particle) => {
+    const size = particle.radius * 1.8;
+    const petalCount = 8;
+
+    ctx.save();
+    ctx.translate(particle.x, particle.y);
+    ctx.rotate(particle.rotation);
+
+    ctx.fillStyle = particle.color;
+    for (let i = 0; i < petalCount; i += 1) {
+      ctx.save();
+      ctx.rotate((Math.PI * 2 * i) / petalCount);
+      ctx.beginPath();
+      ctx.ellipse(0, -size * 0.6, size * 0.28, size * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.fillStyle = SUNFLOWER_CENTER_COLOR;
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  };
+
   const draw = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     frame += 1;
 
     for (const particle of particles) {
-      if (particleType === 'leaves') {
-        drawLeaf(particle);
-      } else {
-        drawSnowflake(particle);
+      switch (particleType) {
+        case 'leaves':
+          drawLeaf(particle);
+          break;
+        case 'blossom':
+          drawPetal(particle);
+          break;
+        case 'sunflower':
+          drawSunflower(particle);
+          break;
+        default:
+          drawSnowflake(particle);
       }
 
       particle.y += particle.speed;
       particle.rotation += particle.rotationSpeed;
 
-      if (particleType === 'leaves') {
-        // Leaves flutter side to side as they fall; snow drifts more steadily.
+      if (flutters) {
+        // Leaves and petals flutter side to side as they fall; snow drifts more steadily.
         particle.x +=
           particle.drift + Math.sin(frame * 0.02 + particle.swayPhase) * particle.swayAmplitude;
       } else {
