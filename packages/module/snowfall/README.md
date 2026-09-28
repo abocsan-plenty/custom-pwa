@@ -1,6 +1,6 @@
 # @demo-agency/snowfall
 
-A PlentyONE Shop PWA module that adds an animated falling snow overlay to every page. Built as a demo/test fixture for the `packages/module` publish workflow (`.github/workflows/publish-module.yml`).
+A PlentyONE Shop PWA module that adds an animated falling particle overlay (leaves or snow) to every page. Built as a demo/test fixture for the `packages/module` publish workflow (`.github/workflows/publish-module.yml`).
 
 ## Usage
 
@@ -12,8 +12,8 @@ modules: [
 ],
 snowfall: {
   enabled: true,
+  particleType: 'leaves', // or 'snow' — color only applies to snow
   flakeCount: 60,
-  color: '#ffffff',
 },
 ```
 
