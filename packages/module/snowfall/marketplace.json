@@ -1,4 +1,5 @@
 {
+  "marketplaceName": { "en": "Snowfall", "de": "Schneefall" },
   "price": 0.00,
   "shortDescription": { "en":  "Adds an animated falling leaves or snow overlay to every shop page.", "de": "Fügt jeder Shop-Seite eine animierte Überlagerung aus fallenden Blättern oder Schnee hinzu." },
   "categories": ["4408"]
